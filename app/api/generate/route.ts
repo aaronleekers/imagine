@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
-const DEFAULT_COUNT = 2
+const DEFAULT_COUNT = 6
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
                 content: [
                   {
                     type: 'text',
-                    text: `Generate an image based on this prompt. Use a 3:2 landscape aspect ratio. Create a high-quality, detailed image. Variation ${i + 1} of ${count}:\n\n${prompt}`,
+                    text: `Generate an image based on this prompt. Use a 2:3 portrait aspect ratio. Create a high-quality, detailed image. Variation ${i + 1} of ${count}:\n\n${prompt}`,
                   },
                 ],
               },

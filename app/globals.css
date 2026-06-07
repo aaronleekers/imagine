@@ -62,25 +62,21 @@ input:focus, textarea:focus, button:focus-visible {
   ring: 1px solid var(--accent);
 }
 
-/* 2-column masonry grid for image wall */
+/* 2-column grid for image wall */
 .image-wall {
-  columns: 2;
-  column-gap: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
   padding: 16px;
 }
 
 @media (max-width: 640px) {
-  .image-wall { columns: 1; column-gap: 8px; padding: 8px; }
+  .image-wall { grid-template-columns: 1fr; gap: 8px; padding: 8px; }
 }
 
-.image-wall > * {
-  break-inside: avoid;
-  margin-bottom: 12px;
-}
-
-/* Image card images maintain 3:2 aspect ratio */
+/* Image card images maintain 2:3 portrait aspect ratio */
 .image-card-img {
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 2 / 3;
   object-fit: cover;
   width: 100%;
 }

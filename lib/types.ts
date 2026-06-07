@@ -42,7 +42,25 @@ export const IMAGE_MODELS: ImageModel[] = [
     id: 'x-ai/grok-imagine-image-quality',
     name: 'Grok Imagine Image Quality',
     provider: 'xAI',
-    description: 'High-quality image generation',
+    description: 'Dedicated image gen — xAI Imagine quality',
+  },
+  {
+    id: 'x-ai/grok-4.3',
+    name: 'Grok 4.3',
+    provider: 'xAI',
+    description: 'Multimodal reasoning + image generation',
+  },
+  {
+    id: 'x-ai/grok-4.20',
+    name: 'Grok 4.20',
+    provider: 'xAI',
+    description: 'Latest Grok — multimodal + image output',
+  },
+  {
+    id: 'x-ai/grok-4.20-multi-agent',
+    name: 'Grok 4.20 Multi-Agent',
+    provider: 'xAI',
+    description: 'Multi-agent variant — image capable',
   },
   {
     id: 'openai/gpt-5-image',

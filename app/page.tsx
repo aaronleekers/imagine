@@ -15,6 +15,7 @@ export default function Home() {
   const [videos, setVideos] = useState<GeneratedVideo[]>([])
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isGeneratingMore, setIsGeneratingMore] = useState(false)
   const [editingImage, setEditingImage] = useState<GeneratedImage | null>(null)
   const [isRewriting, setIsRewriting] = useState(false)
   const [videoImage, setVideoImage] = useState<GeneratedImage | null>(null)
@@ -22,6 +23,9 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null)
   const [activeModel, setActiveModel] = useState(DEFAULT_MODEL)
   const sentinelRef = useRef<HTMLDivElement>(null)
+  const lastPromptRef = useRef<string>('')
+  const lastModelRef = useRef<string>(DEFAULT_MODEL)
+  const generatingMoreRef = useRef(false)
 
   useEffect(() => {
     if (error) {
@@ -30,20 +34,35 @@ export default function Home() {
     }
   }, [error])
 
+  // Infinite scroll: load more history OR auto-generate more when at bottom
+  const visibleImages = images.slice(0, visibleCount)
+  const hasMore = visibleCount < images.length
+  const hasMoreRef = useRef(hasMore)
+  hasMoreRef.current = hasMore
+  const hasImagesRef = useRef(images.length > 0)
+  hasImagesRef.current = images.length > 0
+
   useEffect(() => {
     const sentinel = sentinelRef.current
-    if (!sentinel) return
+    if (!sentinel || isGenerating || isGeneratingMore) return
+
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && visibleCount < images.length) {
+        if (!entries[0].isIntersecting) return
+        if (hasMoreRef.current) {
+          // Lazy-load more from history
           setVisibleCount(prev => Math.min(prev + PAGE_SIZE, images.length))
+        } else if (lastPromptRef.current && hasImagesRef.current && !generatingMoreRef.current) {
+          // All images visible — auto-generate 6 more
+          generatingMoreRef.current = true
+          setIsGeneratingMore(true)
         }
       },
       { rootMargin: '400px' }
     )
     observer.observe(sentinel)
     return () => observer.disconnect()
-  }, [visibleCount, images.length])
+  }, [visibleCount, images.length, isGenerating, isGeneratingMore])
 
   useEffect(() => {
     if (images.length > 0 && visibleCount < PAGE_SIZE) {
@@ -51,10 +70,56 @@ export default function Home() {
     }
   }, [images.length])
 
+  // Auto-generate more when scrolled to bottom
+  useEffect(() => {
+    if (!isGeneratingMore) return
+    const prompt = lastPromptRef.current
+    const model = lastModelRef.current
+    if (!prompt) {
+      setIsGeneratingMore(false)
+      generatingMoreRef.current = false
+      return
+    }
+
+    let cancelled = false
+    const doGenerate = async () => {
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, model }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Generation failed')
+        const urls: string[] = data.urls || (data.url ? [data.url] : [])
+        if (cancelled) return
+        const newImages: GeneratedImage[] = urls.map((url: string) => ({
+          id: generateId(),
+          url,
+          prompt,
+          model: data.model || model,
+          timestamp: Date.now(),
+        }))
+        setImages(prev => [...prev, ...newImages])
+      } catch (err: any) {
+        if (!cancelled) setError(err.message || 'Failed to generate more')
+      } finally {
+        if (!cancelled) {
+          setIsGeneratingMore(false)
+          generatingMoreRef.current = false
+        }
+      }
+    }
+    doGenerate()
+    return () => { cancelled = true }
+  }, [isGeneratingMore])
+
   const handleGenerate = useCallback(async (prompt: string, model: string) => {
     setIsGenerating(true)
     setError(null)
     setActiveModel(model)
+    lastPromptRef.current = prompt
+    lastModelRef.current = model
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -155,9 +220,6 @@ export default function Home() {
     }
   }, [videoImage])
 
-  const visibleImages = images.slice(0, visibleCount)
-  const hasMore = visibleCount < images.length
-
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
       <PromptInput onGenerate={handleGenerate} isGenerating={isGenerating} defaultModel={activeModel} />
@@ -213,14 +275,24 @@ export default function Home() {
       )}
 
       {/* Infinite scroll sentinel */}
-      {hasMore && (
-        <div ref={sentinelRef} className="flex justify-center py-8">
+      <div ref={sentinelRef} className="flex justify-center py-8">
+        {isGeneratingMore ? (
+          <div className="flex items-center gap-2 text-xs font-mono" style={{ color: 'var(--accent)' }}>
+            <span className="inline-block w-3 h-3 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+            <span>GENERATING 6 MORE...</span>
+          </div>
+        ) : hasMore ? (
           <div className="flex items-center gap-2 text-xs font-mono" style={{ color: 'var(--text-dim)' }}>
             <span>SCROLL FOR MORE</span>
             <span className="inline-block w-2 h-2 rounded-full" style={{ background: 'var(--accent)' }} />
           </div>
-        </div>
-      )}
+        ) : images.length > 0 ? (
+          <div className="flex items-center gap-2 text-xs font-mono" style={{ color: 'var(--text-dim)' }}>
+            <span>SCROLL TO GENERATE MORE</span>
+            <span className="inline-block w-2 h-2 rounded-full" style={{ background: 'var(--accent)' }} />
+          </div>
+        ) : null}
+      </div>
 
       {/* Empty state */}
       {images.length === 0 && !isGenerating && (
@@ -231,9 +303,9 @@ export default function Home() {
         </div>
       )}
 
-      {isGenerating && (
+      {(isGenerating || isGeneratingMore) && (
         <div className="image-wall">
-          {[1, 2, 3, 4].map(i => (
+          {Array.from({ length: 6 }, (_, i) => (
             <div key={i} className="rounded-xl overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
               <div className="skeleton w-full" style={{ paddingBottom: `${60 + Math.random() * 40}%` }} />
             </div>
