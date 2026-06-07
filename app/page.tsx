@@ -93,10 +93,11 @@ export default function Home() {
         if (!res.ok) throw new Error(data.error || 'Generation failed')
         const urls: string[] = data.urls || (data.url ? [data.url] : [])
         if (cancelled) return
+        const displayPrompt = data.enhancedPrompt || prompt
         const newImages: GeneratedImage[] = urls.map((url: string) => ({
           id: generateId(),
           url,
-          prompt,
+          prompt: displayPrompt,
           model: data.model || model,
           timestamp: Date.now(),
         }))
@@ -130,11 +131,13 @@ export default function Home() {
       if (!res.ok) throw new Error(data.error || 'Generation failed')
       const urls: string[] = data.urls || (data.url ? [data.url] : [])
       if (urls.length === 0) throw new Error('No images returned')
+      const displayPrompt = data.enhancedPrompt || prompt
+      const displayModel = data.model || model
       const newImages: GeneratedImage[] = urls.map((url: string) => ({
         id: generateId(),
         url,
-        prompt,
-        model: data.model || model,
+        prompt: displayPrompt,
+        model: displayModel,
         timestamp: Date.now(),
       }))
       setImages(prev => [...newImages, ...prev])
@@ -169,11 +172,12 @@ export default function Home() {
       if (!genRes.ok) throw new Error(genData.error || 'Generation failed')
       const urls: string[] = genData.urls || (genData.url ? [genData.url] : [])
       if (urls.length === 0) throw new Error('No images returned')
+      const displayPrompt = genData.enhancedPrompt || rewriteData.prompt
 
       setImages(prev => [...urls.map((url: string) => ({
         id: generateId(),
         url,
-        prompt: rewriteData.prompt,
+        prompt: displayPrompt,
         model: genData.model || editingImage.model,
         timestamp: Date.now(),
       })), ...prev])

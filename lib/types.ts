@@ -45,6 +45,18 @@ export const IMAGE_MODELS: ImageModel[] = [
     description: 'Dedicated image gen — xAI Imagine quality',
   },
   {
+    id: 'x-ai/grok-4.3',
+    name: 'Grok 4.3 → Enhanced',
+    provider: 'xAI',
+    description: 'Grok rewrites your prompt, then generates via GPT-5.4',
+  },
+  {
+    id: 'x-ai/grok-4.20',
+    name: 'Grok 4.20 → Enhanced',
+    provider: 'xAI',
+    description: 'Grok rewrites your prompt, then generates via GPT-5.4',
+  },
+  {
     id: 'openai/gpt-5-image',
     name: 'GPT-5 Image',
     provider: 'OpenAI',
