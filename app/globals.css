@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --bg: #0a0a0b;
+  --surface: #121215;
+  --border: #1e1e22;
+  --accent: #00f0ff;
+  --accent-dim: #0088aa;
+  --text: #e4e4e7;
+  --text-dim: #71717a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(0, 240, 255, 0.03) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(0, 240, 255, 0.02) 0%, transparent 50%);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-dim);
+}
+
+/* Selection */
+::selection {
+  background: rgba(0, 240, 255, 0.2);
+  color: var(--accent);
+}
+
+/* Focus */
+input:focus, textarea:focus, button:focus-visible {
+  outline: none;
+  ring: 1px solid var(--accent);
+}
+
+/* Masonry-like grid for image wall */
+.image-wall {
+  columns: 4;
+  column-gap: 12px;
+  padding: 16px;
+}
+
+@media (max-width: 1200px) {
+  .image-wall { columns: 3; }
+}
+@media (max-width: 800px) {
+  .image-wall { columns: 2; column-gap: 8px; padding: 8px; }
+}
+@media (max-width: 480px) {
+  .image-wall { columns: 1; }
+}
+
+.image-wall > * {
+  break-inside: avoid;
+  margin-bottom: 12px;
+}
+
+/* Glow effects */
+.glow-text {
+  text-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+}
+
+.glow-border:focus-within {
+  box-shadow: 0 0 0 1px var(--accent), 0 0 20px rgba(0, 240, 255, 0.1);
+}
+
+/* Skeleton loading */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--border) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
