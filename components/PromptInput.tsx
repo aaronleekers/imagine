@@ -111,10 +111,10 @@ export default function PromptInput({ onGenerate, isGenerating, defaultModel }: 
 
               {showModels && (
                 <div
-                  className="absolute bottom-full left-0 mb-2 w-72 rounded-xl border overflow-hidden animate-scale-in"
+                  className="absolute top-full left-0 mt-2 w-72 rounded-xl border overflow-hidden animate-scale-in z-50"
                   style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
                 >
-                  <div className="p-1.5">
+                  <div className="p-1.5 max-h-72 overflow-y-auto">
                     {IMAGE_MODELS.map(m => (
                       <button
                         key={m.id}
