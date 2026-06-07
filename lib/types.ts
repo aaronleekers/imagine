@@ -39,6 +39,12 @@ export const IMAGE_MODELS: ImageModel[] = [
     description: 'Latest flagship — highest quality, photorealistic',
   },
   {
+    id: 'x-ai/grok-imagine-image-quality',
+    name: 'Grok Imagine Image Quality',
+    provider: 'xAI',
+    description: 'High-quality image generation',
+  },
+  {
     id: 'openai/gpt-5-image',
     name: 'GPT-5 Image',
     provider: 'OpenAI',
@@ -75,31 +81,37 @@ export const VIDEO_MODELS: VideoModel[] = [
     id: 'x-ai/grok-imagine-video',
     name: 'Grok Imagine Video',
     provider: 'xAI',
-    description: 'Image-to-video generation',
-  },
-  {
-    id: 'x-ai/grok-imagine-image-quality',
-    name: 'Grok Imagine Image Quality',
-    provider: 'xAI',
-    description: 'High-quality image-to-video',
+    description: 'Image-to-video (OpenRouter: sporadic 500 errors)',
   },
   {
     id: 'kwaivgi/kling-video-o1',
     name: 'Kling Video O1',
     provider: 'Kling',
-    description: 'Latest Kling video generation',
+    description: 'Latest Kling video (OpenRouter: sporadic 500 errors)',
   },
   {
     id: 'kwaivgi/kling-v3.0-pro',
     name: 'Kling 3.0 Pro',
     provider: 'Kling',
-    description: 'Pro-level video generation',
+    description: 'Pro video (OpenRouter: sporadic 500 errors)',
   },
   {
     id: 'kwaivgi/kling-v3.0-std',
     name: 'Kling 3.0 Standard',
     provider: 'Kling',
-    description: 'Fast video generation',
+    description: 'Fast video (OpenRouter: sporadic 500 errors)',
+  },
+  {
+    id: 'runway/gen-4',
+    name: 'Gen-4',
+    provider: 'Runway',
+    description: 'High-quality video (needs RUNWAY_API_KEY)',
+  },
+  {
+    id: 'pika/pika-2.2',
+    name: 'Pika 2.2',
+    provider: 'Pika',
+    description: 'Creative video (needs PIKA_API_KEY)',
   },
 ]
 
