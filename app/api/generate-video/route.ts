@@ -3,17 +3,19 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function POST(req: NextRequest) {
   try {
     const { imageUrl, prompt, model } = await req.json()
-
-    if (!imageUrl) {
-      return NextResponse.json({ error: 'Image URL is required' }, { status: 400 })
-    }
-
     const apiKey = process.env.OPENROUTER_API_KEY
     if (!apiKey) {
       return NextResponse.json({ error: 'OpenRouter API key not configured' }, { status: 500 })
     }
 
-    const videoPrompt = prompt || 'Smooth cinematic motion, natural camera movement, subtle parallax'
+    const videoPrompt = prompt || 'Smooth cinematic motion, natural camera movement'
+
+    // Build message content - image is optional (some models are text-to-video)
+    const contentParts: any[] = []
+    if (imageUrl) {
+      contentParts.push({ type: 'image_url', image_url: { url: imageUrl } })
+    }
+    contentParts.push({ type: 'text', text: videoPrompt })
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -25,25 +27,17 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         model: model || 'x-ai/grok-imagine-video',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'image_url', image_url: { url: imageUrl } },
-              { type: 'text', text: videoPrompt },
-            ],
-          },
-        ],
-        max_tokens: 8192,
+        messages: [{ role: 'user', content: contentParts }],
+        max_tokens: 16384,
       }),
     })
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Video generation error:', response.status, errorText)
+      console.error('Video generation error:', model, response.status, errorText.slice(0, 500))
       return NextResponse.json(
-        { error: `Video generation failed: ${response.status}` },
-        { status: response.status }
+        { error: `${model}: ${response.status} — ${errorText.slice(0, 200)}` },
+        { status: response.status < 500 ? 400 : 500 }
       )
     }
 
