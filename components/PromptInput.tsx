@@ -69,7 +69,7 @@ export default function PromptInput({ onGenerate, isGenerating, defaultModel }: 
         {/* Input area */}
         <div
           className={`
-            relative rounded-xl overflow-hidden
+            relative rounded-xl overflow-visible
             border transition-all duration-300
             ${focused ? 'border-accent shadow-[0_0_20px_rgba(0,240,255,0.08)]' : 'border-border'}
           `}
