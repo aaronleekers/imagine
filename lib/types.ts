@@ -72,64 +72,52 @@ export const IMAGE_MODELS: ImageModel[] = [
 
 export const VIDEO_MODELS: VideoModel[] = [
   {
-    id: 'runway/gen-4',
-    name: 'Gen-4',
-    provider: 'Runway',
-    description: 'Latest Runway model — high-quality video',
-  },
-  {
-    id: 'runway/gen-3-turbo',
-    name: 'Gen-3 Turbo',
-    provider: 'Runway',
-    description: 'Fast video generation',
-  },
-  {
-    id: 'kling/v2.1',
-    name: 'Kling 2.1',
-    provider: 'Kling',
-    description: 'High-fidelity video generation',
-  },
-  {
-    id: 'kling/v2.1-pro',
-    name: 'Kling 2.1 Pro',
-    provider: 'Kling',
-    description: 'Pro-level video with advanced control',
-  },
-  {
-    id: 'luma/ray-2',
-    name: 'Ray 2',
-    provider: 'Luma',
-    description: 'Fast cinematic video generation',
-  },
-  {
-    id: 'luma/photon-2',
-    name: 'Photon 2',
-    provider: 'Luma',
-    description: 'High-quality image-to-video',
+    id: 'x-ai/grok-imagine-video',
+    name: 'Grok Imagine Video',
+    provider: 'xAI',
+    description: 'Image-to-video and text-to-video generation',
   },
   {
     id: 'minimax/video-01',
     name: 'Hailuo Video-01',
     provider: 'MiniMax',
-    description: '5-second video generation',
+    description: '5-second video generation (via MiniMax API)',
   },
   {
     id: 'minimax/video-02',
     name: 'Hailuo Video-02',
     provider: 'MiniMax',
-    description: 'Latest MiniMax video model',
+    description: 'Latest MiniMax video model (via MiniMax API)',
+  },
+  {
+    id: 'runway/gen-4',
+    name: 'Gen-4',
+    provider: 'Runway',
+    description: 'High-quality video (needs RUNWAY_API_KEY)',
+  },
+  {
+    id: 'runway/gen-3-turbo',
+    name: 'Gen-3 Turbo',
+    provider: 'Runway',
+    description: 'Fast video (needs RUNWAY_API_KEY)',
+  },
+  {
+    id: 'kling/v2.1',
+    name: 'Kling 2.1',
+    provider: 'Kling',
+    description: 'High-fidelity video (needs KLING_API_KEY)',
+  },
+  {
+    id: 'luma/ray-2',
+    name: 'Ray 2',
+    provider: 'Luma',
+    description: 'Cinematic video (needs LUMA_API_KEY)',
   },
   {
     id: 'pika/pika-2.2',
     name: 'Pika 2.2',
     provider: 'Pika',
-    description: 'Creative video generation',
-  },
-  {
-    id: 'pika/pika-2.2-turbo',
-    name: 'Pika 2.2 Turbo',
-    provider: 'Pika',
-    description: 'Fast creative video gen',
+    description: 'Creative video (needs PIKA_API_KEY)',
   },
 ]
 
