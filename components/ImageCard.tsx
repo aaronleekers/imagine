@@ -46,7 +46,7 @@ export default function ImageCard({ image, onEdit, onRegenerateWithPrompt, onGen
         <img
           src={image.url}
           alt={image.prompt}
-          className={`w-full h-auto block transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0 absolute inset-0'}`}
+          className={`w-full image-card-img block transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0 absolute inset-0'}`}
           onLoad={() => setLoaded(true)}
           loading="lazy"
         />

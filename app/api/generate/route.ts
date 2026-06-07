@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
             content: [
               {
                 type: 'text',
-                text: `Generate an image based on this prompt. Create a high-quality, detailed image:\n\n${prompt}`,
+                text: `Generate an image based on this prompt. Use a 3:2 landscape aspect ratio. Create a high-quality, detailed image:\n\n${prompt}`,
               },
             ],
           },
