@@ -63,13 +63,16 @@ export default function Home() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Generation failed')
-      setImages(prev => [{
+      const urls: string[] = data.urls || (data.url ? [data.url] : [])
+      if (urls.length === 0) throw new Error('No images returned')
+      const newImages: GeneratedImage[] = urls.map((url: string) => ({
         id: generateId(),
-        url: data.url,
+        url,
         prompt,
         model: data.model || model,
         timestamp: Date.now(),
-      }, ...prev])
+      }))
+      setImages(prev => [...newImages, ...prev])
     } catch (err: any) {
       setError(err.message || 'Failed to generate image')
     } finally {
@@ -99,14 +102,16 @@ export default function Home() {
       })
       const genData = await genRes.json()
       if (!genRes.ok) throw new Error(genData.error || 'Generation failed')
+      const urls: string[] = genData.urls || (genData.url ? [genData.url] : [])
+      if (urls.length === 0) throw new Error('No images returned')
 
-      setImages(prev => [{
+      setImages(prev => [...urls.map((url: string) => ({
         id: generateId(),
-        url: genData.url,
+        url,
         prompt: rewriteData.prompt,
         model: genData.model || editingImage.model,
         timestamp: Date.now(),
-      }, ...prev])
+      })), ...prev])
       setEditingImage(null)
     } catch (err: any) {
       setError(err.message || 'Edit failed')

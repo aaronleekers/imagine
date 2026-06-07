@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
+const DEFAULT_COUNT = 2
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt, model } = await req.json()
+    const { prompt, model, count: rawCount } = await req.json()
+    const count = Math.max(1, Math.min(4, Number(rawCount) || DEFAULT_COUNT))
 
     if (!prompt || !model) {
       return NextResponse.json({ error: 'Prompt and model are required' }, { status: 400 })
@@ -15,51 +17,61 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'OpenRouter API key not configured' }, { status: 500 })
     }
 
-    const response = await fetch(OPENROUTER_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': process.env.VERCEL_URL || 'http://localhost:3000',
-        'X-Title': 'Imagine',
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          {
-            role: 'user',
-            content: [
+    // Generate multiple images in parallel
+    const promises = Array.from({ length: count }, async (_, i) => {
+      try {
+        const response = await fetch(OPENROUTER_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+            'HTTP-Referer': process.env.VERCEL_URL || 'http://localhost:3000',
+            'X-Title': 'Imagine',
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
               {
-                type: 'text',
-                text: `Generate an image based on this prompt. Use a 3:2 landscape aspect ratio. Create a high-quality, detailed image:\n\n${prompt}`,
+                role: 'user',
+                content: [
+                  {
+                    type: 'text',
+                    text: `Generate an image based on this prompt. Use a 3:2 landscape aspect ratio. Create a high-quality, detailed image. Variation ${i + 1} of ${count}:\n\n${prompt}`,
+                  },
+                ],
               },
             ],
-          },
-        ],
-        max_tokens: 8192,
-      }),
+            max_tokens: 8192,
+          }),
+        })
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error(`OpenRouter error (${i + 1}/${count}):`, response.status, errorText)
+          return null
+        }
+
+        const data = await response.json()
+        const imageUrl = extractImageFromResponse(data)
+        if (!imageUrl) {
+          console.error(`No image in response (${i + 1}/${count}):`, JSON.stringify(data).slice(0, 200))
+          return null
+        }
+        return imageUrl
+      } catch (err: any) {
+        console.error(`Generate error (${i + 1}/${count}):`, err.message)
+        return null
+      }
     })
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('OpenRouter error:', response.status, errorText)
-      return NextResponse.json(
-        { error: `Image generation failed: ${response.status}` },
-        { status: response.status }
-      )
+    const results = await Promise.all(promises)
+    const urls = results.filter(Boolean) as string[]
+
+    if (urls.length === 0) {
+      return NextResponse.json({ error: 'No images were generated' }, { status: 500 })
     }
 
-    const data = await response.json()
-
-    // Extract image from response
-    const imageUrl = extractImageFromResponse(data)
-
-    if (!imageUrl) {
-      console.error('No image in response:', JSON.stringify(data).slice(0, 500))
-      return NextResponse.json({ error: 'No image generated in response' }, { status: 500 })
-    }
-
-    return NextResponse.json({ url: imageUrl, model })
+    return NextResponse.json({ urls, model })
   } catch (error: any) {
     console.error('Generate error:', error)
     return NextResponse.json({ error: error.message || 'Internal error' }, { status: 500 })
