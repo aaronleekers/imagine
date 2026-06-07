@@ -1,21 +1,24 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect } from 'react'
-import { GeneratedImage, IMAGE_MODELS, generateId } from '@/lib/types'
+import { useState, useCallback, useEffect } from 'react'
+import { GeneratedImage, GeneratedVideo, IMAGE_MODELS, generateId } from '@/lib/types'
 import PromptInput from '@/components/PromptInput'
 import ImageCard from '@/components/ImageCard'
 import EditModal from '@/components/EditModal'
+import VideoModal from '@/components/VideoModal'
 
 const DEFAULT_MODEL = 'openai/gpt-5.4-image-2'
 
 export default function Home() {
   const [images, setImages] = useState<GeneratedImage[]>([])
+  const [videos, setVideos] = useState<GeneratedVideo[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
   const [editingImage, setEditingImage] = useState<GeneratedImage | null>(null)
   const [isRewriting, setIsRewriting] = useState(false)
+  const [videoImage, setVideoImage] = useState<GeneratedImage | null>(null)
+  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [activeModel, setActiveModel] = useState(DEFAULT_MODEL)
-  const sentinelRef = useRef<HTMLDivElement>(null)
 
   // Clear error after 5s
   useEffect(() => {
@@ -70,7 +73,6 @@ export default function Home() {
     setError(null)
 
     try {
-      // First, rewrite the prompt
       const rewriteRes = await fetch('/api/rewrite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -88,7 +90,6 @@ export default function Home() {
 
       const newPrompt = rewriteData.prompt
 
-      // Then generate new image with rewritten prompt
       const genRes = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -125,9 +126,53 @@ export default function Home() {
     handleGenerate(prompt, model)
   }, [handleGenerate])
 
+  const handleGenerateVideo = useCallback((image: GeneratedImage) => {
+    setVideoImage(image)
+  }, [])
+
+  const handleVideoSubmit = useCallback(async (prompt: string, model: string) => {
+    if (!videoImage) return
+
+    setIsGeneratingVideo(true)
+    setError(null)
+
+    try {
+      const res = await fetch('/api/generate-video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageUrl: videoImage.url,
+          prompt,
+          model,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Video generation failed')
+      }
+
+      const newVideo: GeneratedVideo = {
+        id: generateId(),
+        url: data.url,
+        prompt: prompt || videoImage.prompt,
+        sourceImageUrl: videoImage.url,
+        model: data.model || model,
+        timestamp: Date.now(),
+      }
+
+      setVideos(prev => [newVideo, ...prev])
+      setVideoImage(null)
+    } catch (err: any) {
+      setError(err.message || 'Video generation failed')
+    } finally {
+      setIsGeneratingVideo(false)
+    }
+  }, [videoImage])
+
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
-      {/* Input area */}
       <PromptInput
         onGenerate={handleGenerate}
         isGenerating={isGenerating}
@@ -139,17 +184,56 @@ export default function Home() {
         <div className="fixed top-4 right-4 z-[90] animate-slide-up">
           <div
             className="px-4 py-3 rounded-xl border text-sm font-medium flex items-center gap-2"
-            style={{
-              background: 'var(--surface)',
-              borderColor: '#ff4444',
-              color: '#ff6666',
-            }}
+            style={{ background: 'var(--surface)', borderColor: '#ff4444', color: '#ff6666' }}
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
               <path d="M7 4v3.5M7 10v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
             {error}
+          </div>
+        </div>
+      )}
+
+      {/* Videos section */}
+      {videos.length > 0 && (
+        <div className="mb-8">
+          <div className="max-w-3xl mx-auto px-4 mb-3">
+            <h2 className="font-display text-sm tracking-widest flex items-center gap-2" style={{ color: '#c084fc' }}>
+              <svg width="14" height="14" viewBox="0 0 12 12" fill="none">
+                <path d="M1.5 3l4 3-4 3V3zM7.5 2v8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              GENERATED VIDEOS
+            </h2>
+          </div>
+          <div className="image-wall">
+            {videos.map(video => (
+              <div key={video.id} className="rounded-xl overflow-hidden border animate-scale-in" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+                <div className="relative" style={{ background: 'var(--bg)' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <video
+                    src={video.url}
+                    controls
+                    loop
+                    playsInline
+                    className="w-full h-auto block"
+                    poster={video.sourceImageUrl}
+                    preload="metadata"
+                  />
+                </div>
+                <div className="p-2">
+                  <p className="text-[11px] leading-relaxed line-clamp-2" style={{ color: 'var(--text-dim)' }}>
+                    {video.prompt}
+                  </p>
+                </div>
+                <div
+                  className="absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider"
+                  style={{ background: 'rgba(10,10,11,0.8)', color: '#c084fc', border: '1px solid var(--border)' }}
+                >
+                  {video.model.split('/').pop()}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -163,6 +247,7 @@ export default function Home() {
               image={image}
               onEdit={handleEdit}
               onRegenerateWithPrompt={handleRegenerateWithPrompt}
+              onGenerateVideo={handleGenerateVideo}
             />
           ))}
         </div>
@@ -186,10 +271,7 @@ export default function Home() {
         <div className="image-wall">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="rounded-xl overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
-              <div
-                className="skeleton w-full"
-                style={{ paddingBottom: `${60 + Math.random() * 40}%` }}
-              />
+              <div className="skeleton w-full" style={{ paddingBottom: `${60 + Math.random() * 40}%` }} />
             </div>
           ))}
         </div>
@@ -202,6 +284,16 @@ export default function Home() {
           onClose={() => setEditingImage(null)}
           onSubmit={handleEditSubmit}
           isRewriting={isRewriting}
+        />
+      )}
+
+      {/* Video modal */}
+      {videoImage && (
+        <VideoModal
+          image={videoImage}
+          onClose={() => setVideoImage(null)}
+          onSubmit={handleVideoSubmit}
+          isGenerating={isGeneratingVideo}
         />
       )}
     </div>

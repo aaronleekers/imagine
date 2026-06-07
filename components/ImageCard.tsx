@@ -7,9 +7,10 @@ interface ImageCardProps {
   image: GeneratedImage
   onEdit: (image: GeneratedImage) => void
   onRegenerateWithPrompt: (prompt: string, model: string) => void
+  onGenerateVideo: (image: GeneratedImage) => void
 }
 
-export default function ImageCard({ image, onEdit, onRegenerateWithPrompt }: ImageCardProps) {
+export default function ImageCard({ image, onEdit, onRegenerateWithPrompt, onGenerateVideo }: ImageCardProps) {
   const [loaded, setLoaded] = useState(false)
   const [hovered, setHovered] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -71,6 +72,16 @@ export default function ImageCard({ image, onEdit, onRegenerateWithPrompt }: Ima
               <path d="M1 9.5V11h1.5l5.87-5.87-1.5-1.5L1 9.5zm7.73-5.93l-1.5-1.5.75-.75a.5.5 0 01.7 0l.8.8a.5.5 0 010 .7l-.75.75z" fill="currentColor"/>
             </svg>
             EDIT
+          </button>
+          <button
+            onClick={() => onGenerateVideo(image)}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 flex items-center gap-1.5"
+            style={{ background: 'rgba(168,85,247,0.2)', color: '#c084fc' }}
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M1.5 3l4 3-4 3V3zM7.5 2v8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            VIDEO
           </button>
           <button
             onClick={handleCopyPrompt}
