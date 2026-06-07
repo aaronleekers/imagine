@@ -51,24 +51,6 @@ export const IMAGE_MODELS: ImageModel[] = [
     description: 'Fast, efficient image generation',
   },
   {
-    id: 'x-ai/grok-4.3',
-    name: 'Grok 4.3',
-    provider: 'xAI',
-    description: 'xAI flagship — multimodal with image gen',
-  },
-  {
-    id: 'x-ai/grok-4.20',
-    name: 'Grok 4.20',
-    provider: 'xAI',
-    description: 'Powerful multimodal with image gen',
-  },
-  {
-    id: 'x-ai/grok-4',
-    name: 'Grok 4',
-    provider: 'xAI',
-    description: 'Multimodal image generation',
-  },
-  {
     id: 'google/gemini-3-pro-image-preview',
     name: 'Gemini 3 Pro Image',
     provider: 'Google',
@@ -85,12 +67,6 @@ export const IMAGE_MODELS: ImageModel[] = [
     name: 'Gemini 2.5 Flash Image',
     provider: 'Google',
     description: 'Efficient image gen — Nano Banana',
-  },
-  {
-    id: 'openrouter/auto',
-    name: 'Auto Router',
-    provider: 'OpenRouter',
-    description: 'Auto-selects best available image model',
   },
 ]
 
