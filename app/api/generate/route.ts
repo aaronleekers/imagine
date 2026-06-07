@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
             ],
           },
         ],
-        max_tokens: 4096,
+        max_tokens: 8192,
       }),
     })
 
@@ -67,12 +67,46 @@ export async function POST(req: NextRequest) {
 }
 
 function extractImageFromResponse(data: any): string | null {
-  // Try different response formats
-  const content = data?.choices?.[0]?.message?.content
+  const message = data?.choices?.[0]?.message
+  if (!message) return null
+
+  // PRIMARY: Check for images array (OpenRouter native format)
+  const images = message.images
+  if (images && images.length > 0) {
+    const img = images[0]
+    // Handle various nesting formats
+    return img?.image_url?.url
+      || img?.image_url
+      || img?.url
+      || (typeof img === 'string' ? img : null)
+      || null
+  }
+
+  // SECONDARY: Check content field for inline images
+  const content = message.content
   if (!content) return null
 
-  // If content is a string, look for image URLs or base64
+  // If content is an array (multimodal response parts)
+  if (Array.isArray(content)) {
+    for (const part of content) {
+      if (part.type === 'image_url' && part.image_url?.url) {
+        return part.image_url.url
+      }
+      if (part.type === 'image' && (part.url || part.image_url?.url)) {
+        return part.url || part.image_url?.url
+      }
+      if (part.image_url) {
+        return typeof part.image_url === 'string' ? part.image_url : part.image_url?.url || null
+      }
+    }
+  }
+
+  // If content is a string, look for embedded image URLs
   if (typeof content === 'string') {
+    // Base64 data URI
+    const b64Match = content.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/)
+    if (b64Match) return b64Match[0]
+
     // Markdown image: ![alt](url)
     const mdMatch = content.match(/!\[.*?\]\((https?:\/\/[^\s)]+)\)/)
     if (mdMatch) return mdMatch[1]
@@ -81,33 +115,12 @@ function extractImageFromResponse(data: any): string | null {
     const urlMatch = content.match(/(https?:\/\/[^\s]+\.(png|jpg|jpeg|gif|webp)(\?[^\s]*)?)/i)
     if (urlMatch) return urlMatch[0]
 
-    // Base64 data URI
-    const b64Match = content.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/)
-    if (b64Match) return b64Match[0]
-
     // Try parsing as JSON with url field
     try {
       const parsed = JSON.parse(content)
       if (parsed.url) return parsed.url
+      if (parsed.data?.[0]?.url) return parsed.data[0].url
     } catch {}
-  }
-
-  // If content is an array (multimodal response)
-  if (Array.isArray(content)) {
-    for (const part of content) {
-      if (part.type === 'image_url' && part.image_url?.url) {
-        return part.image_url.url
-      }
-      if (part.type === 'image' && part.url) {
-        return part.url
-      }
-    }
-  }
-
-  // Check for images in the message directly
-  const images = data?.choices?.[0]?.message?.images
-  if (images && images.length > 0) {
-    return images[0]?.image_url?.url || images[0]?.url || null
   }
 
   return null
