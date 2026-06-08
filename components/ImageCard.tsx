@@ -21,11 +21,20 @@ export default function ImageCard({ image, onEdit, onRegenerateWithPrompt, onGen
     setTimeout(() => setCopied(false), 1500)
   }
 
-  const handleDownload = () => {
-    const a = document.createElement('a')
-    a.href = image.url
-    a.download = `imagine-${image.id}.png`
-    a.click()
+  const handleDownload = async () => {
+    try {
+      const res = await fetch(image.url)
+      const blob = await res.blob()
+      const ext = blob.type.split('/')[1] || 'png'
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `imagine-${image.id}.${ext}`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      window.open(image.url, '_blank')
+    }
   }
 
   const modelName = image.model ? image.model.split('/').pop() : 'AI'
